@@ -1,34 +1,101 @@
-from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.label import Label
+from kivy.lang import Builder
+from kivy.uix.screenmanager import ScreenManager, Screen
 
-class HomeScreen(BoxLayout):
-    def __init__(self, **kwargs):
-        super().__init__(orientation='vertical', padding=20, spacing=10, **kwargs)
+from kivymd.app import MDApp
+from kivymd.uix.list import OneLineListItem
 
-        self.add_widget(Label(text="🏋️ FitPro", font_size=28))
+KV = '''
+ScreenManager:
+    HomeScreen:
+    WorkoutScreen:
+    ProgressScreen:
 
-        self.add_widget(Button(text="▶️ Iniciar Treino", on_press=self.start_workout))
-        self.add_widget(Button(text="📋 Meus Treinos", on_press=self.show_workouts))
-        self.add_widget(Button(text="📊 Evolução", on_press=self.show_progress))
+<HomeScreen>:
+    name: "home"
 
-        self.status = Label(text="Bem-vindo!", font_size=16)
-        self.add_widget(self.status)
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: 20
+        spacing: 20
 
-    def start_workout(self, instance):
-        self.status.text = "Treino iniciado!"
+        MDLabel:
+            text: "🏋️ FitPro"
+            halign: "center"
+            font_style: "H4"
 
-    def show_workouts(self, instance):
-        self.status.text = "Lista de treinos (em construção)"
+        MDRaisedButton:
+            text: "Iniciar Treino"
+            pos_hint: {"center_x": 0.5}
+            on_release: app.root.current = "workout"
 
-    def show_progress(self, instance):
-        self.status.text = "Gráficos (em construção)"
+        MDRaisedButton:
+            text: "Evolução"
+            pos_hint: {"center_x": 0.5}
+            on_release: app.root.current = "progress"
+
+        MDRaisedButton:
+            text: "Sair"
+            pos_hint: {"center_x": 0.5}
+            on_release: app.stop()
+
+<WorkoutScreen>:
+    name: "workout"
+
+    MDBoxLayout:
+        orientation: "vertical"
+
+        MDTopAppBar:
+            title: "Treino A"
+            left_action_items: [["arrow-left", lambda x: app.voltar()]]
+
+        ScrollView:
+            MDList:
+                id: exercise_list
+
+        MDRaisedButton:
+            text: "Adicionar Exercício"
+            pos_hint: {"center_x": 0.5}
+            on_release: app.add_exercise()
+
+<ProgressScreen>:
+    name: "progress"
+
+    MDBoxLayout:
+        orientation: "vertical"
+
+        MDTopAppBar:
+            title: "Evolução"
+            left_action_items: [["arrow-left", lambda x: app.voltar()]]
+
+        MDLabel:
+            text: "📊 Em breve: gráficos de evolução"
+            halign: "center"
+'''
+
+class HomeScreen(Screen):
+    pass
+
+class WorkoutScreen(Screen):
+    pass
+
+class ProgressScreen(Screen):
+    pass
 
 
-class FitApp(App):
+class FitApp(MDApp):
+
     def build(self):
-        return HomeScreen()
+        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.primary_palette = "Blue"
+        return Builder.load_string(KV)
+
+    def voltar(self):
+        self.root.current = "home"
+
+    def add_exercise(self):
+        exercise_name = f"Exercício {len(self.root.get_screen('workout').ids.exercise_list.children)+1}"
+        item = OneLineListItem(text=exercise_name)
+        self.root.get_screen('workout').ids.exercise_list.add_widget(item)
 
 
 if __name__ == "__main__":
